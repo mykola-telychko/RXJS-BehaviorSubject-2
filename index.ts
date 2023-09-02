@@ -2,9 +2,13 @@ console.clear();
 import { BehaviorSubject, fromEvent, interval, merge } from 'rxjs';
 import { map, tap, mergeMap } from 'rxjs/operators';
 
-const setElementText = (elemId, text) => 
-  document.getElementById(elemId).innerText = text.toString();
-const addHtmlElement = coords => document.body.innerHTML += `
+// Example 2: BehaviorSubject with new subscribers created on mouse clicks
+// https://www.learnrxjs.io/learn-rxjs/subjects/behaviorsubject
+
+const setElementText = (elemId, text) =>
+  (document.getElementById(elemId).innerText = text.toString());
+const addHtmlElement = (coords) =>
+  (document.body.innerHTML += `
   <div 
     id=${coords.id}
     style="
@@ -17,25 +21,23 @@ const addHtmlElement = coords => document.body.innerHTML += `
       background: silver;
       border-radius: 80%;"
     >
-  </div>`;
+  </div>`);
 
 const subject = new BehaviorSubject(0);
 
 const click$ = fromEvent(document, 'click').pipe(
-  map((e: MouseEvent) => ({ 
+  map((e: MouseEvent) => ({
     x: e.clientX,
     y: e.clientY,
-    id: Math.random() })),
+    id: Math.random(),
+  })),
   tap(addHtmlElement),
-  mergeMap(coords =>
-    subject
-      .pipe(tap(v => setElementText(coords.id, v)))
-  )
+  mergeMap((coords) => subject.pipe(tap((v) => setElementText(coords.id, v))))
 );
 
 const interval$ = interval(1000).pipe(
-  tap(v => subject.next(v)),
-  tap(v => setElementText('intervalValue', v))
+  tap((v) => subject.next(v)),
+  tap((v) => setElementText('intervalValue', v))
 );
 
 merge(click$, interval$).subscribe();
